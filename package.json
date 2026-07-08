@@ -1,31 +1,24 @@
 {
-	"name": "positron-api-smoke",
-	"displayName": "Positron API Smoke",
-	"description": "Spike: run a Mocha extension-host test against a downloaded Positron daily and confirm the Positron API is live (posit-dev/positron#14530).",
-	"version": "0.0.1",
-	"private": true,
-	"engines": {
-		"vscode": "^1.100.0"
-	},
-	"main": "./out/extension.js",
-	"activationEvents": [
-		"*"
-	],
-	"contributes": {},
-	"scripts": {
-		"compile": "tsc -p ./",
-		"test": "npm run compile && node ./out/runTests.js"
-	},
-	"dependencies": {
-		"@posit-dev/positron": "^0.2.4",
-		"@vscode/test-electron": "^2.4.1",
-		"glob": "^10.4.5",
-		"mocha": "^10.7.3"
-	},
-	"devDependencies": {
-		"@types/mocha": "^10.0.7",
-		"@types/node": "^20.14.0",
-		"@types/vscode": "^1.100.0",
-		"typescript": "^5.5.4"
-	}
+  "name": "@posit-dev/positron-test-electron",
+  "version": "0.1.0",
+  "description": "Download a real Positron build and run @vscode/test-electron-style extension-host integration tests against the live positron.* API.",
+  "engines": { "node": ">=20" },
+  "main": "./out/index.js",
+  "types": "./out/index.d.ts",
+  "exports": { ".": { "types": "./out/index.d.ts", "default": "./out/index.js" } },
+  "bin": { "positron-test-electron": "./out/cli.js" },
+  "files": ["out", "!out/**/*.test.js", "!out/**/*.test.d.ts", "README.md"],
+  "scripts": {
+    "build": "tsc -p ./",
+    "pretest": "npm run build",
+    "test": "node --test out",
+    "test:integration": "npm run build && npm --prefix example install && npm --prefix example run compile && node example/out/runExampleTests.js"
+  },
+  "dependencies": {
+    "@vscode/test-electron": "^2.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
 }
