@@ -3,3 +3,5 @@ out/
 example/out/
 example/node_modules/
 .positron-test/
+.superpowers/
+superpowers-docs/
