@@ -1,7 +1,7 @@
 # @posit-dev/positron-test-electron
 
-Download a real Positron build and run `@vscode/test-electron`-style extension-host
-integration tests against the live `positron.*` API — without building Positron from
+Download Positron and run `@vscode/test-electron`-style extension-host
+integration tests against the live `positron.*` API without building Positron from
 source.
 
 > **v1 supports macOS (arm64 + x64).** Windows/Linux support follows once extractable
@@ -53,23 +53,3 @@ npx positron-test-electron \
 
 Default launch args: `--disable-extensions --skip-welcome --skip-release-notes`, plus
 a fresh temp `--user-data-dir`.
-
-## Marketplace-dependent extensions
-
-Keep `--disable-extensions` for a clean host. If your extension depends on a
-*marketplace* extension, resolve the Positron CLI and install it before launch:
-
-```ts
-import { downloadAndUnzipPositron, resolveCliArgsFromPositronExecutablePath } from '@posit-dev/positron-test-electron';
-import { spawnSync } from 'child_process';
-
-const exe = await downloadAndUnzipPositron({ channel: 'daily' });
-const [cli] = resolveCliArgsFromPositronExecutablePath(exe);
-spawnSync(cli, ['--install-extension', 'publisher.extension'], { stdio: 'inherit' });
-```
-
-## GitHub Actions
-
-The version-keyed cache maps onto `actions/cache`; pinned versions are immutable, so
-they cache cleanly. No secrets are required (downloads are public). macOS runners run
-headless with the defaults. See `example/` for a working extension + integration test.
