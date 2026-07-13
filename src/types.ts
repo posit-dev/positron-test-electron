@@ -16,6 +16,16 @@ export interface DownloadOptions {
 export interface PositronTestOptions extends DownloadOptions {
   extensionDevelopmentPath: string;
   extensionTestsPath: string;
+  /**
+   * Launch with `--disable-extensions`, running the extension under test in
+   * isolation from all other installed and bundled extensions (the pattern
+   * recommended by the VS Code testing docs). Default `true`.
+   *
+   * Set to `false` when your tests depend on other extensions being active —
+   * for example Positron's bundled language runtimes, or another extension's
+   * contributed API.
+   */
+  disableExtensions?: boolean;
   /** Extra launch args, merged after the defaults. */
   launchArgs?: string[];
 }

@@ -49,7 +49,10 @@ npx positron-test-electron \
 | `cachePath` | `--cache-path` | `.positron-test` | cache root |
 | `extensionDevelopmentPath` | `--extension-development-path` | — | required |
 | `extensionTestsPath` | `--extension-tests-path` | — | required |
+| `disableExtensions` | `--enable-extensions` (sets `false`) | `true` | isolate the extension under test; set `false` when tests need other extensions |
 | `launchArgs` | after `--` | see below | merged after the defaults |
 
 Default launch args: `--disable-extensions --skip-welcome --skip-release-notes`, plus
-a fresh temp `--user-data-dir`.
+a fresh temp `--user-data-dir`. When `disableExtensions` is `false`,
+`--disable-extensions` is omitted so Positron's bundled extensions (language
+runtimes, notebook export, etc.) load alongside the extension under test.

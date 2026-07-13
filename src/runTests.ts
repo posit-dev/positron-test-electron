@@ -6,10 +6,19 @@ import { runTests as vscodeRunTests } from '@vscode/test-electron';
 import { downloadAndUnzipPositron } from './download';
 import { PositronTestOptions } from './types';
 
-const DEFAULT_LAUNCH_ARGS = ['--disable-extensions', '--skip-welcome', '--skip-release-notes'];
+const BASE_LAUNCH_ARGS = ['--skip-welcome', '--skip-release-notes'];
 
-export function mergeLaunchArgs(userDataDir: string, extra: string[] = []): string[] {
-  return ['--user-data-dir', userDataDir, ...DEFAULT_LAUNCH_ARGS, ...extra];
+export function mergeLaunchArgs(
+  userDataDir: string,
+  extra: string[] = [],
+  disableExtensions = true,
+): string[] {
+  return [
+    '--user-data-dir', userDataDir,
+    ...(disableExtensions ? ['--disable-extensions'] : []),
+    ...BASE_LAUNCH_ARGS,
+    ...extra,
+  ];
 }
 
 export async function runTests(options: PositronTestOptions): Promise<number> {
@@ -31,6 +40,10 @@ export async function runTests(options: PositronTestOptions): Promise<number> {
     vscodeExecutablePath: executablePath,
     extensionDevelopmentPath: options.extensionDevelopmentPath,
     extensionTestsPath: options.extensionTestsPath,
-    launchArgs: mergeLaunchArgs(userDataDir, options.launchArgs),
+    launchArgs: mergeLaunchArgs(
+      userDataDir,
+      options.launchArgs,
+      options.disableExtensions ?? true,
+    ),
   });
 }

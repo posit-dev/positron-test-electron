@@ -16,6 +16,7 @@ export function parseArgs(argv: string[]): PositronTestOptions {
       case '--cache-path': opts.cachePath = argv[++i]; break;
       case '--extension-development-path': opts.extensionDevelopmentPath = argv[++i]; break;
       case '--extension-tests-path': opts.extensionTestsPath = argv[++i]; break;
+      case '--enable-extensions': opts.disableExtensions = false; break;
       case '--': launchArgs.push(...argv.slice(i + 1)); i = argv.length; break;
       default: throw new Error(`Unknown argument: ${arg}`);
     }
