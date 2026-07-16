@@ -2,6 +2,10 @@
   "name": "@posit-dev/positron-test-electron",
   "version": "0.0.2",
   "description": "Download a real Positron build and run @vscode/test-electron-style extension-host integration tests against the live positron.* API.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/posit-dev/positron-test-electron.git"
+  },
   "engines": {
     "node": ">=20"
   },
