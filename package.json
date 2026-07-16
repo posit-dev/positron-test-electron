@@ -1,6 +1,6 @@
 {
   "name": "@posit-dev/positron-test-electron",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Download a real Positron build and run @vscode/test-electron-style extension-host integration tests against the live positron.* API.",
   "engines": {
     "node": ">=20"
