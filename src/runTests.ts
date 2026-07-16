@@ -23,7 +23,7 @@ const BASE_LAUNCH_ARGS = ['--skip-welcome', '--skip-release-notes'];
  * `--user-data-dir` launch arg (`@vscode/test-electron` chokes on the
  * duplicate) and works regardless of `disableExtensions`.
  */
-async function seedUserSettings(userDataDir: string): Promise<void> {
+export async function seedUserSettings(userDataDir: string): Promise<void> {
   const userDir = path.join(userDataDir, 'User');
   await fsp.mkdir(userDir, { recursive: true });
   await fsp.writeFile(
