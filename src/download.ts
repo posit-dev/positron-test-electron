@@ -19,13 +19,43 @@ export async function sha256OfFile(file: string): Promise<string> {
   return hash.digest('hex');
 }
 
-function defaultExtract(archive: string, destDir: string): void {
-  const result = spawnSync('unzip', ['-q', archive, '-d', destDir]);
+function run(command: string, args: string[]): void {
+  const result = spawnSync(command, args);
   if (result.error) {
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(`unzip failed (exit ${result.status}): ${result.stderr?.toString()}`);
+    throw new Error(
+      `${command} failed (exit ${result.status}): ${result.stderr?.toString()}`,
+    );
+  }
+}
+
+/**
+ * Extracting a Windows zip needs bsdtar, which ships with Windows 10+ as
+ * System32\tar.exe. A bare `tar` on PATH can instead resolve to GNU tar (e.g.
+ * from Git for Windows), which cannot read zip archives — so resolve the system
+ * bsdtar by absolute path and only fall back to PATH if it's missing.
+ */
+function windowsBsdtar(): string {
+  const systemRoot = process.env.SystemRoot || process.env.windir || 'C:\\Windows';
+  const bsdtar = path.join(systemRoot, 'System32', 'tar.exe');
+  return fs.existsSync(bsdtar) ? bsdtar : 'tar';
+}
+
+function defaultExtract(archive: string, destDir: string): void {
+  if (archive.endsWith('.tar.gz') || archive.endsWith('.tgz')) {
+    // Linux archives. `tar` (GNU on Linux, bsdtar elsewhere) handles gzip tarballs
+    // and preserves the executable bit on the Positron binary.
+    run('tar', ['-xzf', archive, '-C', destDir]);
+  } else if (process.platform === 'win32') {
+    // Windows zip — extract with the bundled bsdtar (avoids a dependency on
+    // `unzip`, which Windows lacks).
+    run(windowsBsdtar(), ['-xf', archive, '-C', destDir]);
+  } else {
+    // macOS zip. `unzip` preserves the symlinks and permissions inside the
+    // Positron.app bundle (frameworks rely on them).
+    run('unzip', ['-q', archive, '-d', destDir]);
   }
 }
 

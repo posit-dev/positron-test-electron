@@ -6,7 +6,7 @@ on:
 
 jobs:
   release:
-    runs-on: macos-latest # v1 supports macOS only; the integration test requires it
+    runs-on: macos-latest # pre-publish smoke test; per-OS coverage runs in tests.yml
 
     permissions:
       contents: read

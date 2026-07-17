@@ -7,6 +7,7 @@ export {
 } from './platform';
 export {
   PositronPlatformNotSupportedError,
+  PositronStableNotAvailableError,
   PositronVersionNotFoundError,
   PositronChecksumError,
 } from './errors';
