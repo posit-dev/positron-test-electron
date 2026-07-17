@@ -43,20 +43,38 @@ function windowsBsdtar(): string {
   return fs.existsSync(bsdtar) ? bsdtar : 'tar';
 }
 
-function defaultExtract(archive: string, destDir: string): void {
+export interface ExtractCommand {
+  command: string;
+  args: string[];
+}
+
+/**
+ * Choose the extraction command for an archive. Split out from the runner so the
+ * per-format/per-platform dispatch is unit-testable without spawning a process.
+ */
+export function extractCommand(
+  archive: string,
+  destDir: string,
+  platform: NodeJS.Platform = process.platform,
+): ExtractCommand {
   if (archive.endsWith('.tar.gz') || archive.endsWith('.tgz')) {
     // Linux archives. `tar` (GNU on Linux, bsdtar elsewhere) handles gzip tarballs
     // and preserves the executable bit on the Positron binary.
-    run('tar', ['-xzf', archive, '-C', destDir]);
-  } else if (process.platform === 'win32') {
+    return { command: 'tar', args: ['-xzf', archive, '-C', destDir] };
+  }
+  if (platform === 'win32') {
     // Windows zip — extract with the bundled bsdtar (avoids a dependency on
     // `unzip`, which Windows lacks).
-    run(windowsBsdtar(), ['-xf', archive, '-C', destDir]);
-  } else {
-    // macOS zip. `unzip` preserves the symlinks and permissions inside the
-    // Positron.app bundle (frameworks rely on them).
-    run('unzip', ['-q', archive, '-d', destDir]);
+    return { command: windowsBsdtar(), args: ['-xf', archive, '-C', destDir] };
   }
+  // macOS zip. `unzip` preserves the symlinks and permissions inside the
+  // Positron.app bundle (frameworks rely on them).
+  return { command: 'unzip', args: ['-q', archive, '-d', destDir] };
+}
+
+function defaultExtract(archive: string, destDir: string): void {
+  const { command, args } = extractCommand(archive, destDir);
+  run(command, args);
 }
 
 export interface DownloadDeps {

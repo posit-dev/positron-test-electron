@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import * as path from 'path';
 import {
   getPlatformDescriptor,
+  hostPlatform,
   resolveCliArgsFromPositronExecutablePath,
 } from './platform';
 import { PositronPlatformNotSupportedError } from './errors';
@@ -32,6 +33,22 @@ test('getPlatformDescriptor returns a linux descriptor for linux-x64', () => {
 
 test('getPlatformDescriptor throws for an unsupported platform', () => {
   assert.throws(() => getPlatformDescriptor('win32-ia32'), PositronPlatformNotSupportedError);
+});
+
+test('hostPlatform resolves to a supported descriptor on this host (mac/win/linux x64/arm64)', function () {
+  const { platform, arch } = process;
+  const supportedHost =
+    (platform === 'darwin' || platform === 'win32' || platform === 'linux') &&
+    (arch === 'arm64' || arch === 'x64');
+  if (!supportedHost) {
+    // Unsupported host (e.g. linux-ia32): hostPlatform must reject, not guess.
+    assert.throws(() => hostPlatform(), PositronPlatformNotSupportedError);
+    return;
+  }
+  const host = hostPlatform();
+  assert.strictEqual(host, `${platform}-${arch}`);
+  // hostPlatform and the descriptor map must agree — no unmapped host slips through.
+  assert.strictEqual(getPlatformDescriptor(host).platform, host);
 });
 
 // The resolver uses path.resolve internally (which anchors to the current drive

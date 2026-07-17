@@ -6,7 +6,7 @@ import * as path from 'path';
 import { getPlatformDescriptor } from './platform';
 import { isComplete, buildDir, markComplete } from './cache';
 import { HttpError, PositronChecksumError, PositronVersionNotFoundError } from './errors';
-import { downloadBuild, downloadAndUnzipPositron } from './download';
+import { downloadBuild, downloadAndUnzipPositron, extractCommand } from './download';
 import type { ResolvedBuild } from './resolve';
 
 const descriptor = getPlatformDescriptor('darwin-arm64');
@@ -89,4 +89,27 @@ test('downloadAndUnzipPositron downloads on a cache miss', async () => {
     },
   );
   assert.strictEqual(downloadCalled, true);
+});
+
+test('extractCommand uses tar -xzf for .tar.gz regardless of host platform', () => {
+  for (const platform of ['linux', 'darwin', 'win32'] as NodeJS.Platform[]) {
+    const cmd = extractCommand('/tmp/Positron-linux-1-x64.tar.gz', '/dest', platform);
+    assert.strictEqual(cmd.command, 'tar');
+    assert.deepStrictEqual(cmd.args, ['-xzf', '/tmp/Positron-linux-1-x64.tar.gz', '-C', '/dest']);
+  }
+  // .tgz is also recognized
+  assert.strictEqual(extractCommand('/tmp/x.tgz', '/dest', 'linux').command, 'tar');
+});
+
+test('extractCommand uses bsdtar (tar) for a Windows zip', () => {
+  const cmd = extractCommand('/tmp/Positron-win32-1-x64.zip', '/dest', 'win32');
+  // System32\tar.exe when present, else 'tar' — host-independent shape check.
+  assert.match(cmd.command, /tar(\.exe)?$/i);
+  assert.deepStrictEqual(cmd.args, ['-xf', '/tmp/Positron-win32-1-x64.zip', '-C', '/dest']);
+});
+
+test('extractCommand uses unzip for a macOS zip', () => {
+  const cmd = extractCommand('/tmp/Positron-darwin-1-arm64.zip', '/dest', 'darwin');
+  assert.strictEqual(cmd.command, 'unzip');
+  assert.deepStrictEqual(cmd.args, ['-q', '/tmp/Positron-darwin-1-arm64.zip', '-d', '/dest']);
 });
