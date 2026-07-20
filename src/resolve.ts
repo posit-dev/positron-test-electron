@@ -1,6 +1,7 @@
 import { getJson as defaultGetJson } from './http';
 import { getPlatformDescriptor, hostPlatform, PlatformDescriptor } from './platform';
 import { PositronChannel, DownloadOptions } from './types';
+import { PositronStableNotAvailableError } from './errors';
 
 const CDN_BASE = 'https://cdn.posit.co/positron';
 
@@ -59,6 +60,12 @@ export async function resolveBuild(
   const url = `${baseUrlFor(channel, descriptor)}/releases.json`;
   const { status, body } = await deps.getJson(url);
   if (status !== 200) {
+    // Windows/Linux 'stable' latest isn't published until the first stable release
+    // from the new archive workflow is cut; the CDN object 404s/403s until then.
+    // (macOS 'stable' already resolves.) See issue #2.
+    if (channel === 'stable' && (status === 403 || status === 404)) {
+      throw new PositronStableNotAvailableError(descriptor.platform);
+    }
     throw new Error(`Failed to fetch releases.json: HTTP ${status} for ${url}\n${body.slice(0, 500)}`);
   }
   const release = JSON.parse(body) as ReleasesJson;

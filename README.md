@@ -4,8 +4,14 @@ Download Positron and run `@vscode/test-electron`-style extension-host
 integration tests against the live `positron.*` API without building Positron from
 source.
 
-> **v1 supports macOS (arm64 + x64).** Windows/Linux support follows once extractable
-> archives are published to the CDN.
+> Supports macOS (`darwin-arm64`, `darwin-x64`), Windows (`win32-x64`, `win32-arm64`),
+> and Linux (`linux-x64`, `linux-arm64`).
+>
+> **Windows/Linux caveat:** `channel: 'daily'` and pinned `version`s work today. The
+> latest `channel: 'stable'` is not available yet — the first stable release built
+> from the new archive workflow has not been cut. Until then, use `daily` or pin a
+> `version` on Windows/Linux. (macOS `stable` works.) See
+> [issue #2](https://github.com/posit-dev/positron-test-electron/issues/2).
 
 ## Install
 
@@ -45,7 +51,7 @@ npx positron-test-electron \
 |---|---|---|---|
 | `channel` | `--channel` | `daily` | `stable` → releases, `daily` → dailies |
 | `version` | `--version` | latest | exact pin, e.g. `2026.08.0-365` (reproducible CI) |
-| `platform` | `--platform` | host | `darwin-arm64` \| `darwin-x64` |
+| `platform` | `--platform` | host | `darwin-arm64` \| `darwin-x64` \| `win32-x64` \| `win32-arm64` \| `linux-x64` \| `linux-arm64` |
 | `cachePath` | `--cache-path` | `.positron-test` | cache root |
 | `extensionDevelopmentPath` | `--extension-development-path` | — | required |
 | `extensionTestsPath` | `--extension-tests-path` | — | required |

@@ -2,17 +2,19 @@ name: tests
 
 on:
   workflow_dispatch:
+  workflow_call: # allow other workflows (e.g. release.yml) to reuse this matrix as a gate
   push:
     branches: ["main"]
   pull_request:
 
 jobs:
   unit:
-    name: "Unit tests (Node ${{ matrix.node-version }})"
-    runs-on: ubuntu-latest
+    name: "Unit tests (${{ matrix.os }}, Node ${{ matrix.node-version }})"
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: ["20", "24"] # lowest and highest supported versions
     steps:
       - uses: actions/checkout@v6
@@ -27,8 +29,12 @@ jobs:
         run: npm test
 
   integration:
-    name: "Integration test (macOS)"
-    runs-on: macos-latest # v1 supports macOS only (arm64 + x64)
+    name: "Integration test (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v6
       - name: Setup Node
@@ -38,5 +44,10 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      # Electron needs a display on Linux; run the extension host under Xvfb.
+      - name: Run integration test (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:integration
       - name: Run integration test
+        if: runner.os != 'Linux'
         run: npm run test:integration

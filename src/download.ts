@@ -19,14 +19,62 @@ export async function sha256OfFile(file: string): Promise<string> {
   return hash.digest('hex');
 }
 
-function defaultExtract(archive: string, destDir: string): void {
-  const result = spawnSync('unzip', ['-q', archive, '-d', destDir]);
+function run(command: string, args: string[]): void {
+  const result = spawnSync(command, args);
   if (result.error) {
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(`unzip failed (exit ${result.status}): ${result.stderr?.toString()}`);
+    throw new Error(
+      `${command} failed (exit ${result.status}): ${result.stderr?.toString()}`,
+    );
   }
+}
+
+/**
+ * Extracting a Windows zip needs bsdtar, which ships with Windows 10+ as
+ * System32\tar.exe. A bare `tar` on PATH can instead resolve to GNU tar (e.g.
+ * from Git for Windows), which cannot read zip archives — so resolve the system
+ * bsdtar by absolute path and only fall back to PATH if it's missing.
+ */
+function windowsBsdtar(): string {
+  const systemRoot = process.env.SystemRoot || process.env.windir || 'C:\\Windows';
+  const bsdtar = path.join(systemRoot, 'System32', 'tar.exe');
+  return fs.existsSync(bsdtar) ? bsdtar : 'tar';
+}
+
+export interface ExtractCommand {
+  command: string;
+  args: string[];
+}
+
+/**
+ * Choose the extraction command for an archive. Split out from the runner so the
+ * per-format/per-platform dispatch is unit-testable without spawning a process.
+ */
+export function extractCommand(
+  archive: string,
+  destDir: string,
+  platform: NodeJS.Platform = process.platform,
+): ExtractCommand {
+  if (archive.endsWith('.tar.gz') || archive.endsWith('.tgz')) {
+    // Linux archives. `tar` (GNU on Linux, bsdtar elsewhere) handles gzip tarballs
+    // and preserves the executable bit on the Positron binary.
+    return { command: 'tar', args: ['-xzf', archive, '-C', destDir] };
+  }
+  if (platform === 'win32') {
+    // Windows zip — extract with the bundled bsdtar (avoids a dependency on
+    // `unzip`, which Windows lacks).
+    return { command: windowsBsdtar(), args: ['-xf', archive, '-C', destDir] };
+  }
+  // macOS zip. `unzip` preserves the symlinks and permissions inside the
+  // Positron.app bundle (frameworks rely on them).
+  return { command: 'unzip', args: ['-q', archive, '-d', destDir] };
+}
+
+function defaultExtract(archive: string, destDir: string): void {
+  const { command, args } = extractCommand(archive, destDir);
+  run(command, args);
 }
 
 export interface DownloadDeps {
