@@ -2,6 +2,7 @@ name: tests
 
 on:
   workflow_dispatch:
+  workflow_call: # allow other workflows (e.g. release.yml) to reuse this matrix as a gate
   push:
     branches: ["main"]
   pull_request:
